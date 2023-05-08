@@ -1,12 +1,29 @@
 from itertools import permutations
 from profile_gen import *
 
-
+# returns true if s1 >=^K s2 based on p
+# s1, s2: sets of alternatives represented as lists of numbers
+# p: relation between alternatives represented as list with alternative -> ranking
 def kelly(s1, s2, p):
     if s1 == s2:
         return False
     for i in s1:
         for j in s2:
+            if p[i] > p[j]:
+                return False
+    return True
+
+def fishburn(s1, s2, p):
+    if s1 == s2:
+        return False
+    s12 = list(set(s1) - set(s2))
+    s21 = list(set(s2) - set(s1))
+    for i in s12:
+        for j in s2:
+            if p[i] > p[j]:
+                return False
+    for i in s1:
+        for j in s21:
             if p[i] > p[j]:
                 return False
     return True

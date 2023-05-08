@@ -1,6 +1,7 @@
 import queue
 
 import numpy as np
+import scipy.optimize as opt
 
 
 def plurality(r):
@@ -69,6 +70,20 @@ def to_tournament(r):
                 t[k[j]][k[i]] += v
     return t
 
+def to_simple_tournament(r):
+    t = to_tournament(r)
+    m = len(t)
+    st = np.zeros((m, m), int)
+    for i in range(m):
+        for j in range(i):
+            if t[i][j] > t[j][i]:
+                st[i][j] = 1
+            else:
+                if t[i][j] < t[j][i]:
+                    st[i][j] = -1
+            st[j][i] = -st[i][j]
+    return st
+
 def copeland(r):
     t = to_tournament(r)
     m = len(t)
@@ -119,5 +134,9 @@ def uncovered_set(r):
     return [i for i in range(m) if all(matrix[i])]
 
 def bipartisan_set(r):
-    t = to_tournament(r)
+    t = to_simple_tournament(r)
     m = len(t)
+    zeros = np.zeros(m)
+    ones = np.ones(m)
+    res = opt.linprog(c=zeros, A_ub=t, b_ub=zeros, A_eq=np.ones((m,m)), b_eq=ones, bounds=(0, 1))
+    return [i for i in range(m) if res.x[i] > 0]
