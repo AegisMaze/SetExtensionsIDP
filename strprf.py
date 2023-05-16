@@ -29,13 +29,14 @@ def fishburn(s1, s2, p):
     return True
 
 def manipulable(r, scf, ext):
+    w = scf(r)
     for p in iter(r.keys()):
-        if manipulable_p(r, p, scf, ext):
+        r2 = r.copy()
+        if manipulable_p(r2, p, w, scf, ext):
             return True
     return False
 
-def manipulable_p(r, p, scf, ext):
-    w = scf(r)
+def manipulable_p(r, p, w, scf, ext):
     remove_ranking(r, p)
     p3 = profile_form_change(p)
     for p2 in permutations(p, len(p)):
@@ -45,3 +46,6 @@ def manipulable_p(r, p, scf, ext):
         remove_ranking(r, p2)
     add_ranking(r, p)
     return False
+
+def manipulable_count(x, n, m, scf, ext):
+    return sum(manipulable(generate_profile(n, m), scf, ext) for _ in range(x))
