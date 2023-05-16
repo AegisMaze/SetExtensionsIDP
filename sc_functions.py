@@ -61,6 +61,13 @@ def pareto(r):
                 dom[k[j]][k[i]] = True
     return [i for i in range(m) if all(dom[i])]
 
+def omninomination(r):
+    m = len(next(iter(r)))
+    check = np.zeros(m)
+    for k, _ in r.items():
+        check[k[0]] = True
+    return sorted([i for i in range(m) if check[i]])
+
 def to_tournament(r):
     m = len(next(iter(r)))
     t = np.zeros((m, m), int)
@@ -83,6 +90,14 @@ def to_simple_tournament(r):
                     st[i][j] = -1
             st[j][i] = -st[i][j]
     return st
+
+def condorcet(r):
+    t = to_simple_tournament(r)
+    m = len(t)
+    for i in range(m):
+        if all(t[i]):
+            return [i]
+    return [i for i in range(m)]
 
 def copeland(r):
     t = to_tournament(r)
