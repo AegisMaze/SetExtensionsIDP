@@ -92,3 +92,6 @@ def manipulable_p(r, p, w, scf, ext):
 
 def manipulable_count(x, n, m, scf, ext):
     return sum(manipulable(generate_profile(n, m), scf, ext) for _ in range(x))
+
+def manipulable_count_cartesian(x, n, m, d, scf, ext):
+    return sum(manipulable(generate_cartesian_profile(n, m, d), scf, ext) for _ in range(x))

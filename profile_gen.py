@@ -1,21 +1,40 @@
+import random
+
 import numpy as np
+
 
 def generate_ranking(m):
     return tuple(np.random.permutation(m))
 
-def generate_profile(n,m):
+
+def generate_profile(n, m):
     r = {}
     for _ in range(n):
         add_ranking(r, generate_ranking(m))
     return r
 
+
+def generate_cartesian_ranking(m_coords_sqrd, d):
+    point_sqrd = [random.random() ** 2 for _ in range(d)]
+    dists = [np.sqrt(sum([abs(m[i] - point_sqrd[i]) for i in range(d)])) for m in m_coords_sqrd]
+    return tuple(np.argsort(dists))
+
+def generate_cartesian_profile(n, m, d):
+    m_coords_sqrd = [[random.random() ** 2 for _ in range(d)] for _ in range(m)]
+    r = {}
+    for _ in range(n):
+        add_ranking(r, generate_cartesian_ranking(m_coords_sqrd, d))
+    return r
+
 def add_ranking(r, p):
     r[p] = 1 + r[p] if p in r else 1
+
 
 def remove_ranking(r, p):
     r[p] -= 1
     if r[p] == 0:
         r.pop(p)
+
 
 def profile_form_change(p):
     p2 = np.zeros(len(p))
