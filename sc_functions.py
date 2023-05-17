@@ -66,7 +66,7 @@ def omninomination(r):
     check = np.zeros(m)
     for k, _ in r.items():
         check[k[0]] = True
-    return sorted([i for i in range(m) if check[i]])
+    return [i for i in range(m) if check[i]]
 
 def to_tournament(r):
     m = len(next(iter(r)))
