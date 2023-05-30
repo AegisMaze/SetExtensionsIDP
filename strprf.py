@@ -67,9 +67,16 @@ def pessimist(s1, s2, p):
             w1 = i
     w2 = s2[0]
     for i in s2:
-        if p[i] < p[w2]:
+        if p[i] > p[w2]:
             w2 = i
-    return p[w1] > p[w2]
+    return p[w1] < p[w2]
+
+def singleton(s1, s2, p):
+    if len(s1) != 1 or len(s2) != 1:
+        return False
+    if p[s1[0]] < p[s2[0]]:
+        return True
+    return False
 
 def manipulable(r, scf, ext):
     w = scf(r)
@@ -90,8 +97,8 @@ def manipulable_p(r, p, w, scf, ext):
     add_ranking(r, p)
     return False
 
-def manipulable_count(x, n, m, scf, ext):
-    return sum(manipulable(generate_profile(n, m), scf, ext) for _ in range(x))
+def manipulable_count(profiles, scf, ext):
+    return sum(manipulable(p, scf, ext) for p in profiles)
 
-def manipulable_count_cartesian(x, n, m, d, scf, ext):
-    return sum(manipulable(generate_cartesian_profile(n, m, d), scf, ext) for _ in range(x))
+def manipulable_count_cartesian(profiles, scf, ext):
+    return sum(manipulable(p, scf, ext) for p in profiles)
