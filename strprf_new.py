@@ -232,6 +232,8 @@ def manipulable_count_pareto(p, n_exts):
     winners, _ = pareto(p)
 
     for r in iter(p):
+        if all(count[2:5]) and all(count[6:]):
+            break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
             remove_ranking(p2, r)
@@ -240,12 +242,24 @@ def manipulable_count_pareto(p, n_exts):
                 w2, _ = pareto(p2)
                 if winners != w2:
                     pfc = profile_form_change(r)
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[6]:
+                        if singleton(w2, winners, pfc):
+                            count[6] = 1
                     if not count[7]:
-                        #TODO: add gardenfors, optimist, pessimist, singleton
                         if even_chance(w2, winners, pfc):
                             count[7] = 1
-                            return count
                 remove_ranking(p2, r2)
+
+    count[5] = count[3] or count[4]
 
     return count
 
@@ -281,7 +295,7 @@ def manipulable_count_condorcet(p, n_exts, res):
     winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if count[4] and count[7]:
+        if count[3:5] and count[7]:
             break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
@@ -291,7 +305,9 @@ def manipulable_count_condorcet(p, n_exts, res):
                 w2 = res[profile_to_number(p2)]
                 if winners != w2:
                     pfc = profile_form_change(r)
-                    #TODO: optimist
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
                     if not count[4]:
                         if pessimist(w2, winners, pfc):
                             count[4] = 1
@@ -312,7 +328,7 @@ def manipulable_count_copeland(p, n_exts, res):
     winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if all(count[:5]) and count[7]:
+        if all(count[:5]) and count[6:]:
             break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
@@ -337,6 +353,9 @@ def manipulable_count_copeland(p, n_exts, res):
                     if not count[4]:
                         if pessimist(w2, winners, pfc):
                             count[4] = 1
+                    if not count[6]:
+                        if singleton(w2, winners, pfc):
+                            count[6] = 1
                     if not count[7]:
                         if even_chance(w2, winners, pfc):
                             count[7] = 1
