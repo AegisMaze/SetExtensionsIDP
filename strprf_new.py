@@ -4,261 +4,508 @@ from itertools import permutations
 from sc_functions import *
 from extensions import *
 from profile_gen import *
+from tourneys import *
 
 def manipulable_count_plurality(p, n_exts):
+    count = np.zeros(n_exts)
+    count2 = np.zeros(n_exts)
 
-    count = np.zeros(n_exts, dtype='int8')
-
-    winners, votes, maximum = plurality(p)
+    winners, k_winners = plurality(p)
 
     for r in iter(p):
-        if r[0] not in winners:
-            if len(winners) > 1:
-                count[0:3] = 1
-                count[4] = 1
-                for a in r[1:]:
-                    if a in winners:
-                        break
-                    if votes[a] == maximum - 1:
-                        count[3] = 1
-                        break
-            else:
-                for a in r[1:]:
-                    if a == winners[0]:
-                        break
-                    if votes[a] == maximum - 1:
-                        count[0:4] = 1
-                        break
-        else:
-            if len(winners) > 2:
-                count[4] = 1
+        if all(count[:5]) and count[7] and all(count2[:5]) and count2[7]:
+            break
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            r2 = list(r).copy()
+            for i in range(len(r2) - 1):
+                r2[0] = (r2[0] + 1) % len(r)
+                add_ranking(p2, tuple(r2))
+                w2, kw2 = plurality(p2)
+                pfc = profile_form_change(r)
+                if winners != w2:
+                    if not count[0]:
+                        if kelly(w2, winners, pfc):
+                            count[0:3] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                if k_winners != kw2:
+                    if not count2[0]:
+                        if kelly(kw2, k_winners, pfc):
+                            count2[0:3] = 1
+                    if not count2[3]:
+                        if optimist(kw2, k_winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(kw2, k_winners, pfc):
+                            count2[4] = 1
+                    if not count2[7]:
+                        if even_chance(kw2, k_winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, tuple(r2))
+        elif not (all(count2[:5]) and count2[7]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            r2 = list(r).copy()
+            for i in range(len(r2) - 1):
+                r2[0] = (r2[0] + 1) % len(r)
+                add_ranking(p2, tuple(r2))
+                _, kw2 = plurality(p2)
+                pfc = profile_form_change(r)
+                if k_winners != kw2:
+                    if not count2[0]:
+                        if kelly(kw2, k_winners, pfc):
+                            count2[0:3] = 1
+                    if not count2[3]:
+                        if optimist(kw2, k_winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(kw2, k_winners, pfc):
+                            count2[4] = 1
+                    if not count2[7]:
+                        if even_chance(kw2, k_winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, tuple(r2))
+
     count[5] = count[3] or count[4]
+    count2[5] = count2[3] or count2[4]
 
-    #TODO: even_chance
-
-    return count
+    return count, count2
 
 
 def manipulable_count_borda(p, n_exts):
 
-    count = np.zeros(n_exts, dtype='int8')
+    count = np.zeros(n_exts)
+    count2 = np.zeros(n_exts)
 
-    winners, scores, maximum = borda(p)
+    winners, k_winners = borda(p)
 
     for r in iter(p):
-        if all(count[:5]):
+        if all(count[:5]) and all(count[6:]) and all(count2[:5]) and all(count2[6:]):
             break
-        p2 = p.copy()
-        remove_ranking(p2, r)
-        for r2 in permutations(r, len(r)):
-            add_ranking(p2, r2)
-            w2, _, _ = borda(p2)
-            if winners != w2:
-                pfc = profile_form_change(r)
-                if not count[0]:
-                    if kelly(w2, winners, pfc):
-                        count[0] = 1
-                if not count[1]:
-                    if fishburn(w2, winners, pfc):
-                        count[1] = 1
-                if not count[2]:
-                    if gardenfoers(w2, winners, pfc):
-                        count[2] = 1
-                if not count[3]:
-                    if optimist(w2, winners, pfc):
-                        count[3] = 1
-                if not count[4]:
-                    if pessimist(w2, winners, pfc):
-                        count[4] = 1
-            remove_ranking(p2, r2)
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2, kw2 = borda(p2)
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[0]:
+                        if kelly(w2, winners, pfc):
+                            count[0] = 1
+                    if not count[1]:
+                        if fishburn(w2, winners, pfc):
+                            count[1] = 1
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[6]:
+                        if singleton(w2, winners, pfc):
+                            count[6] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                if k_winners != kw2:
+                    pfc = profile_form_change(r)
+                    if not count2[0]:
+                        if kelly(kw2, k_winners, pfc):
+                            count2[0] = 1
+                    if not count2[1]:
+                        if fishburn(kw2, k_winners, pfc):
+                            count2[1] = 1
+                    if not count2[2]:
+                        if gardenfoers(kw2, k_winners, pfc):
+                            count2[2] = 1
+                    if not count2[3]:
+                        if optimist(kw2, k_winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(kw2, k_winners, pfc):
+                            count2[4] = 1
+                    if not count2[6]:
+                        if singleton(kw2, k_winners, pfc):
+                            count2[6] = 1
+                    if not count2[7]:
+                        if even_chance(kw2, k_winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, r2)
+        elif not (all(count2[:5]) and all(count2[6:])):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                _, kw2 = borda(p2)
+                if k_winners != kw2:
+                    pfc = profile_form_change(r)
+                    if not count2[0]:
+                        if kelly(kw2, k_winners, pfc):
+                            count2[0] = 1
+                    if not count2[1]:
+                        if fishburn(kw2, k_winners, pfc):
+                            count2[1] = 1
+                    if not count2[2]:
+                        if gardenfoers(kw2, k_winners, pfc):
+                            count2[2] = 1
+                    if not count2[3]:
+                        if optimist(kw2, k_winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(kw2, k_winners, pfc):
+                            count2[4] = 1
+                    if not count2[6]:
+                        if singleton(kw2, k_winners, pfc):
+                            count2[6] = 1
+                    if not count2[7]:
+                        if even_chance(kw2, k_winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, r2)
 
     count[5] = count[3] or count[4]
+    count2[5] = count2[3] or count2[4]
 
-    return count
+    return count, count2
 
-def manipulable_count_inst_runoff(p, n_exts):
+def manipulable_count_inst_runoff(p, n, n_exts):
+
+    count = np.zeros(n_exts)
 
     winners, _ = instant_runoff(p)
 
     for r in iter(p):
-        i = r.index(winners[0])
-        for j in range(i):
+        if all(count[:5]) and all(count[6:]):
+            break
+        if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
             remove_ranking(p2, r)
-            r2 = list(r)
-            a = r2[0]
-            r2[0] = r2[j]
-            r2[j] = a
-            r2 = tuple(r2)
-            add_ranking(p2, r2)
-            w2, _ = instant_runoff(p2)
-            if w2[0] != winners[0]:
-                return np.ones(n_exts, dtype='int8')
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2, _ = instant_runoff(p2)
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[0]:
+                        if kelly(w2, winners, pfc):
+                            count[0] = 1
+                    if not count[1]:
+                        if fishburn(w2, winners, pfc):
+                            count[1] = 1
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[6]:
+                        if singleton(w2, winners, pfc):
+                            count[6] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                remove_ranking(p2, r2)
 
-    return np.zeros(n_exts, dtype='int8')
+    count[5] = count[3] or count[4]
+
+    return count
 
 
 def manipulable_count_pareto(p, n_exts):
 
-    # TODO: even_chance
+    count = np.zeros(n_exts)
 
-    return np.zeros(n_exts, dtype='int8')
+    winners, _ = pareto(p)
+
+    for r in iter(p):
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2, _ = pareto(p2)
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[7]:
+                        #TODO: add gardenfors, optimist, pessimist, singleton
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                            return count
+                remove_ranking(p2, r2)
+
+    return count
 
 
 def manipulable_count_omninomi(p, n_exts):
+    count = np.zeros(n_exts)
 
-    # TODO: even_chance
+    winners, _ = omninomination(p)
 
-    return np.zeros(n_exts, dtype='int8')
-
-
-def manipulable_count_condorcet(p, n_exts, n):
-
-    # TODO: even_chance
-
-    count = np.zeros(n_exts, dtype='int8')
-
-    winners, tournament = condorcet(p)
-
-    if len(winners) != 1:
-        for r in iter(p):
-            for i in range(len(tournament)):
-                a = r[i]
-                for j in range(len(tournament)):
-                    b = r[j]
-                    if i < j:
-                        if tournament[a][b] < (n - 1) / 2:
-                            break
-                    if i > j:
-                        if tournament[a][b] <= (n - 1) / 2:
-                            break
-                    count[4] = 1
-                    count[5] = 1
+    for r in iter(p):
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            r2 = list(r).copy()
+            for i in range(len(r2) - 1):
+                r2[0] = (r2[0] + 1) % len(r)
+                add_ranking(p2, tuple(r2))
+                w2, _ = omninomination(p2)
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                            return count
+                remove_ranking(p2, tuple(r2))
 
     return count
 
 
-def manipulable_count_copeland(p, n_exts):
+def manipulable_count_condorcet(p, n_exts, res):
+    count = np.zeros(n_exts)
 
-    count = np.zeros(n_exts, dtype='int8')
-
-    winners, tournament = copeland(p)
+    winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if all(count[:5]):
+        if count[4] and count[7]:
             break
-        p2 = p.copy()
-        remove_ranking(p2, r)
-        for r2 in permutations(r, len(r)):
-            add_ranking(p2, r2)
-            w2, _ = copeland(p2)
-            if winners != w2:
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    #TODO: optimist
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                remove_ranking(p2, r2)
+
+    count[5] = count[3] or count[4]
+
+    return count
+
+
+def manipulable_count_copeland(p, n_exts, res):
+
+    count = np.zeros(n_exts)
+
+    winners = res[profile_to_number(p)]
+
+    for r in iter(p):
+        if all(count[:5]) and count[7]:
+            break
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[0]:
+                        if kelly(w2, winners, pfc):
+                            count[0] = 1
+                    if not count[1]:
+                        if fishburn(w2, winners, pfc):
+                            count[1] = 1
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                remove_ranking(p2, r2)
+
+    count[5] = count[3] or count[4]
+
+    return count
+
+
+def manipulable_count_top_cycle(p, n_exts, res):
+
+    count = np.zeros(n_exts)
+    count2 = np.zeros(n_exts)
+
+    winners = res[profile_to_number(p)]
+    k_winners = winners if len(winners) == 1 else winners[:2]
+
+    for r in iter(p):
+        if count[3] and count[4] and count[7] and count2[3] and count2[4] and count2[7]:
+            break
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                kw2 = w2 if len(w2) == 1 else w2[:2]
                 pfc = profile_form_change(r)
-                if not count[0]:
-                    if kelly(w2, winners, pfc):
-                        count[0] = 1
-                if not count[1]:
-                    if fishburn(w2, winners, pfc):
-                        count[1] = 1
-                if not count[2]:
-                    if gardenfoers(w2, winners, pfc):
-                        count[2] = 1
-                if not count[3]:
-                    if optimist(w2, winners, pfc):
-                        count[3] = 1
-                if not count[4]:
-                    if pessimist(w2, winners, pfc):
-                        count[4] = 1
-            remove_ranking(p2, r2)
+                if winners != w2:
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                if k_winners != kw2:
+                    if not count2[3]:
+                        if optimist(w2, winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(w2, winners, pfc):
+                            count2[4] = 1
+                    if not count2[7]:
+                        if even_chance(w2, winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, r2)
+        elif not (count2[3] and count2[4] and count2[7]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                kw2 = w2 if len(w2) == 1 else w2[:2]
+                if k_winners != kw2:
+                    pfc = profile_form_change(r)
+                    if not count2[3]:
+                        if optimist(w2, winners, pfc):
+                            count2[3] = 1
+                    if not count2[4]:
+                        if pessimist(w2, winners, pfc):
+                            count2[4] = 1
+                    if not count2[7]:
+                        if even_chance(w2, winners, pfc):
+                            count2[7] = 1
+                remove_ranking(p2, r2)
 
     count[5] = count[3] or count[4]
+    count2[5] = count2[3] or count2[4]
 
-    return count
+    return count, count2
 
 
-def manipulable_count_top_cycle(p, n_exts):
+def manipulable_count_uncovered(p, n_exts, res):
 
-    count = np.zeros(n_exts, dtype='int8')
+    count = np.zeros(n_exts)
 
-    winners, tournament = top_cycle(p)
+    winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if count[3] and count[4]:
+        if all(count[1:5]) and count[7]:
             break
-        p2 = p.copy()
-        remove_ranking(p2, r)
-        for r2 in permutations(r, len(r)):
-            add_ranking(p2, r2)
-            w2, _ = top_cycle(p2)
-            if winners != w2:
-                if not count[3]:
-                    if optimist(w2, winners, profile_form_change(r)):
-                        count[3] = 1
-                if not count[4]:
-                    if pessimist(w2, winners, profile_form_change(r)):
-                        count[4] = 1
-            remove_ranking(p2, r2)
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[1]:
+                        if fishburn(w2, winners, pfc):
+                            count[1] = 1
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                remove_ranking(p2, r2)
 
     count[5] = count[3] or count[4]
 
     return count
 
 
-def manipulable_count_uncovered(p, n_exts):
+def manipulable_count_bipartisan(p, n_exts, res):
+    count = np.zeros(n_exts)
 
-    count = np.zeros(n_exts, dtype='int8')
-
-    winners, tournament = uncovered_set(p)
+    winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if all(count[1:5]):
+        if all(count[1:5]) and count[7]:
             break
-        p2 = p.copy()
-        remove_ranking(p2, r)
-        for r2 in permutations(r, len(r)):
-            add_ranking(p2, r2)
-            w2, _ = uncovered_set(p2)
-            if winners != w2:
-                pfc = profile_form_change(r)
-                if not count[1]:
-                    if fishburn(w2, winners, pfc):
-                        count[1] = 1
-                if not count[2]:
-                    if gardenfoers(w2, winners, pfc):
-                        count[2] = 1
-                if not count[3]:
-                    if optimist(w2, winners, pfc):
-                        count[3] = 1
-                if not count[4]:
-                    if pessimist(w2, winners, pfc):
-                        count[4] = 1
-            remove_ranking(p2, r2)
+        if not (len(winners) == 1 and winners[0] == r[0]):
+            p2 = p.copy()
+            remove_ranking(p2, r)
+            for r2 in permutations(r, len(r)):
+                add_ranking(p2, r2)
+                w2 = res[profile_to_number(p2)]
+                if winners != w2:
+                    pfc = profile_form_change(r)
+                    if not count[1]:
+                        if fishburn(w2, winners, pfc):
+                            count[1] = 1
+                    if not count[2]:
+                        if gardenfoers(w2, winners, pfc):
+                            count[2] = 1
+                    if not count[3]:
+                        if optimist(w2, winners, pfc):
+                            count[3] = 1
+                    if not count[4]:
+                        if pessimist(w2, winners, pfc):
+                            count[4] = 1
+                    if not count[7]:
+                        if even_chance(w2, winners, pfc):
+                            count[7] = 1
+                remove_ranking(p2, r2)
 
     count[5] = count[3] or count[4]
 
     return count
 
 
-def manipulable_count_bipartisan():
-    pass
+def manipulable_count_all(p, n, res):
 
-
-def manipulable_count_all(p, n):
-
-    n_scfs = 9
+    n_scfs = 13
     n_exts = 8
 
     count = np.zeros((n_scfs, n_exts))
 
-    count[0] = manipulable_count_plurality(p, n_exts)
-    count[1] = manipulable_count_borda(p, n_exts)
-    count[2] = manipulable_count_inst_runoff(p, n_exts)
+    count[0], count[10] = manipulable_count_plurality(p, n_exts)
+    count[1], count[11] = manipulable_count_borda(p, n_exts)
+    count[2] = manipulable_count_inst_runoff(p, n, n_exts)
     count[3] = manipulable_count_pareto(p, n_exts)
     count[4] = manipulable_count_omninomi(p, n_exts)
-    count[5] = manipulable_count_condorcet(p, n_exts, n)
-    count[6] = manipulable_count_copeland(p, n_exts)
-    count[7] = manipulable_count_top_cycle(p, n_exts)
-    count[8] = manipulable_count_uncovered(p, n_exts)
-    #count[9] = manipulable_count_bipartisan()
+    count[5] = manipulable_count_condorcet(p, n_exts, res[0])
+    count[6] = manipulable_count_copeland(p, n_exts, res[1])
+    count[7], count[12] = manipulable_count_top_cycle(p, n_exts, res[2])
+    count[8] = manipulable_count_uncovered(p, n_exts, res[3])
+    count[9] = manipulable_count_bipartisan(p, n_exts, res[4])
 
     return count

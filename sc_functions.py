@@ -10,7 +10,10 @@ def plurality(r):
     for k, v in r.items():
         count[k[0]] += v
     maximum = max(count)
-    return sorted([i for i, j in enumerate(count) if j == maximum]), count, maximum
+    winners = [i for i, j in enumerate(count) if j == maximum]
+    count[winners[0]] = -1
+    maximum2 = max(count)
+    return winners, sorted([winners[0]] + [i for i, j in enumerate(count) if j == maximum2])
 
 
 def borda(r):
@@ -20,7 +23,10 @@ def borda(r):
         for i in range(m):
             count[k[i]] += v * (m - i - 1)
     maximum = max(count)
-    return sorted([i for i, j in enumerate(count) if j == maximum]), count, maximum
+    winners = sorted([i for i, j in enumerate(count) if j == maximum])
+    count[winners[0]] = -1
+    maximum2 = max(count)
+    return winners, sorted([winners[0]] + [i for i, j in enumerate(count) if j == maximum2])
 
 
 def instant_runoff(r):
@@ -59,14 +65,14 @@ def pareto(r):
         for i in range(m):
             for j in range(i + 1):
                 dom[k[j]][k[i]] = True
-    return [i for i in range(m) if all(dom[i])], _
+    return [i for i in range(m) if all(dom[i])], 1
 
 def omninomination(r):
     m = len(next(iter(r)))
     check = np.zeros(m)
     for k, _ in r.items():
         check[k[0]] = True
-    return [i for i in range(m) if check[i]], _
+    return [i for i in range(m) if check[i]], 1
 
 def to_tournament(r):
     m = len(next(iter(r)))
@@ -91,12 +97,14 @@ def to_simple_tournament(r):
     return st
 
 def condorcet(r):
-    t = to_simple_tournament(r)
+    return condorcet_t(to_simple_tournament(r))
+
+def condorcet_t(t):
     m = len(t)
     for i in range(m):
         if all(t[i]):
-            return [i], to_tournament(r)
-    return [i for i in range(m)], to_tournament(r)
+            return [i]
+    return [i for i in range(m)]
 
 def copeland(r):
     t = to_tournament(r)
@@ -117,7 +125,7 @@ def copeland_t(t):
                     count[j] += 1
         count[i] += 1
     maximum = max(count)
-    return [i for i in range(m) if count[i] == maximum], t
+    return [i for i in range(m) if count[i] == maximum]
 
 def top_cycle(r):
     t = to_tournament(r)
@@ -127,7 +135,7 @@ def top_cycle_t(t):
     m = len(t)
     dom = np.zeros(m, bool)
     q = queue.Queue()
-    for i in copeland_t(t)[0]:
+    for i in copeland_t(t):
         q.put(i)
         dom[i] = True
     while not q.empty():
@@ -136,10 +144,13 @@ def top_cycle_t(t):
             if not dom[j] and t[j][i] >= t[i][j]:
                 q.put(j)
                 dom[j] = True
-    return [i for i in range(m) if dom[i]], t
+    return [i for i in range(m) if dom[i]]
 
 def uncovered_set(r):
     t = to_tournament(r)
+    return uncovered_set_t(t)
+
+def uncovered_set_t(t):
     m = len(t)
     dom = np.zeros((m, m), bool)
     for i in range(m):
@@ -151,12 +162,17 @@ def uncovered_set(r):
     id = np.zeros((m,m), bool)
     np.fill_diagonal(id, True)
     matrix = id | dom | (dom @ dom)
-    return [i for i in range(m) if all(matrix[i])], t
+    return [i for i in range(m) if all(matrix[i])]
 
 def bipartisan_set(r):
     t = to_simple_tournament(r)
+    return bipartisan_set_t(t)
+
+def bipartisan_set_t(t):
     m = len(t)
     zeros = np.zeros(m)
     ones = np.ones(m)
-    res = opt.linprog(c=zeros, A_ub=t, b_ub=zeros, A_eq=np.ones((m,m)), b_eq=ones, bounds=(0, 1), method='highs')
+    id = np.zeros((m, m))
+    np.fill_diagonal(id, 1)
+    res = opt.linprog(c=zeros, A_ub=t - id, b_ub=zeros, A_eq=np.ones((m,m)), b_eq=ones, bounds=(0, 1), method='highs')
     return [i for i in range(m) if res.x[i] > 0]
