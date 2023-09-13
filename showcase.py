@@ -1,11 +1,16 @@
 from timeit import default_timer as timer
+
+import numpy as np
+
 from strprf_new import *
 from tourneys import *
 from graph_gen import *
 
 import json
+import ast
+import csv
 
-x = 10
+x = 100000
 d = 3
 
 scfs = ["plurality", "borda", "instant runoff", "pareto", "omninomination", "condorcet", "copeland", "top cycle", "uncovered set", "bipartisan set", "2-plurality", "2-borda", "2-top cycle"]
@@ -21,6 +26,7 @@ res = [[con_res[m], cop_res[m], top_res[m], unc_res[m], bip_res[m]] for m in ran
 start = timer()
 for n in [3,5,7,9,11]:
     for m in [3,4,5]:
+
         profiles = [generate_profile(n, m) for _ in range(x)]
         with open("profiles/impartial_" + str(n) + "_" + str(m) + ".json", 'w') as fout:
             json.dump([str(p) for p in profiles], fout)
@@ -36,6 +42,7 @@ for n in [3,5,7,9,11]:
         count_to_graph(scfs, exts, counts, "graphs/cube" + str(n) + "_" + str(m) + ".png")
 
         dists = mallows_dists(m)
+
         profiles = [generate_mallows_profile(n, m, 0.25, dists) for _ in range(x)]
         with open("profiles/mallows25" + str(n) + "_" + str(m) + ".json", 'w') as fout:
             json.dump([str(p) for p in profiles], fout)
@@ -49,5 +56,6 @@ for n in [3,5,7,9,11]:
         counts = sum(manipulable_count_all(p, n, res[m - 3]) for p in profiles).transpose()
         np.savetxt("results/mallows5_" + str(n) + "_" + str(m) + ".csv", counts, delimiter=",", fmt="%d")
         count_to_graph(scfs, exts, counts, "graphs/mallows5_" + str(n) + "_" + str(m) + ".png")
+
 end = timer()
 print(end - start)

@@ -88,6 +88,16 @@ def singleton(s1, s2, p):
 
 
 def even_chance(s1, s2, p):
-    v1 = sum([len(p) - p[a] for a in s1]) / float(len(s1))
-    v2 = sum([len(p) - p[a] for a in s2]) / float(len(s2))
-    return v1 > v2
+    if s1 == s2:
+        return False
+    indif = True
+    for i in range(len(p)):
+        v1 = sum(p[a] <= i for a in s1) / len(s1)
+        v2 = sum(p[a] <= i for a in s2) / len(s2)
+        if v1 < v2:
+            return False
+        if indif and v1 > v2:
+            indif = False
+    if indif:
+        return False
+    return True

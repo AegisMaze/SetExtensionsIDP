@@ -13,7 +13,7 @@ def manipulable_count_plurality(p, n_exts):
     winners, k_winners = plurality(p)
 
     for r in iter(p):
-        if all(count[:5]) and count[7] and all(count2[:5]) and count2[7]:
+        if count[7] and count2[7]: #all(count[:5]) and count[7] and all(count2[:5]) and count2[7]:
             break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
@@ -25,7 +25,7 @@ def manipulable_count_plurality(p, n_exts):
                 w2, kw2 = plurality(p2)
                 pfc = profile_form_change(r)
                 if winners != w2:
-                    if not count[0]:
+                    """if not count[0]:
                         if kelly(w2, winners, pfc):
                             count[0:3] = 1
                     if not count[3]:
@@ -33,12 +33,12 @@ def manipulable_count_plurality(p, n_exts):
                             count[3] = 1
                     if not count[4]:
                         if pessimist(w2, winners, pfc):
-                            count[4] = 1
+                            count[4] = 1"""
                     if not count[7]:
                         if even_chance(w2, winners, pfc):
                             count[7] = 1
                 if k_winners != kw2:
-                    if not count2[0]:
+                    """if not count2[0]:
                         if kelly(kw2, k_winners, pfc):
                             count2[0:3] = 1
                     if not count2[3]:
@@ -46,12 +46,12 @@ def manipulable_count_plurality(p, n_exts):
                             count2[3] = 1
                     if not count2[4]:
                         if pessimist(kw2, k_winners, pfc):
-                            count2[4] = 1
+                            count2[4] = 1"""
                     if not count2[7]:
                         if even_chance(kw2, k_winners, pfc):
                             count2[7] = 1
                 remove_ranking(p2, tuple(r2))
-        elif not (all(count2[:5]) and count2[7]):
+        elif not count2[7]: #(all(count2[:5]) and count2[7]):
             p2 = p.copy()
             remove_ranking(p2, r)
             r2 = list(r).copy()
@@ -61,7 +61,7 @@ def manipulable_count_plurality(p, n_exts):
                 _, kw2 = plurality(p2)
                 pfc = profile_form_change(r)
                 if k_winners != kw2:
-                    if not count2[0]:
+                    """if not count2[0]:
                         if kelly(kw2, k_winners, pfc):
                             count2[0:3] = 1
                     if not count2[3]:
@@ -69,7 +69,7 @@ def manipulable_count_plurality(p, n_exts):
                             count2[3] = 1
                     if not count2[4]:
                         if pessimist(kw2, k_winners, pfc):
-                            count2[4] = 1
+                            count2[4] = 1"""
                     if not count2[7]:
                         if even_chance(kw2, k_winners, pfc):
                             count2[7] = 1
@@ -295,7 +295,7 @@ def manipulable_count_condorcet(p, n_exts, res):
     winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if count[3:5] and count[7]:
+        if all(count[3:5]) and count[7]:
             break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()
@@ -328,7 +328,7 @@ def manipulable_count_copeland(p, n_exts, res):
     winners = res[profile_to_number(p)]
 
     for r in iter(p):
-        if all(count[:5]) and count[6:]:
+        if all(count[:5]) and all(count[6:]):
             break
         if not (len(winners) == 1 and winners[0] == r[0]):
             p2 = p.copy()

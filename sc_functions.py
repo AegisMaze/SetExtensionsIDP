@@ -102,7 +102,7 @@ def condorcet(r):
 def condorcet_t(t):
     m = len(t)
     for i in range(m):
-        if all(t[i]):
+        if all(t[i] + 1):
             return [i]
     return [i for i in range(m)]
 
